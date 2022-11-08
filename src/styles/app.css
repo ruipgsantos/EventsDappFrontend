@@ -1,0 +1,37 @@
+body {
+    margin: 5px;
+    font-size: 20px;
+}
+
+.metamask_button {
+    display: flex;
+    align-items: center;
+}
+
+.metamask_fox {
+    /* background-image: url('../../public/images/metamaskfox.png');
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    background-position: right; */
+    height: 20px;
+    /* width: 20px; */
+    content: url('../../public/images/metamaskfox.png');
+    margin-left: 5px;
+}
+
+.content {
+    padding: 30px;
+    border: 1px rgba(0, 0, 0, 0.1) solid;
+    border-radius: 5px;
+}
+
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    margin: 0 0 20px 0;
+    padding: 5px;
+    background-color: lightgray;
+    border-radius: 5px;
+    align-items: center;
+}
