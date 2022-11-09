@@ -1,0 +1,16 @@
+.eventImage img {
+    max-height: 200px;
+}
+
+.container {
+    padding: 10px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(5, 1fr);
+    grid-column-gap: 7px;
+    grid-row-gap: 7px;
+}
+
+.card-text {
+    font-size: 15px;
+}
