@@ -4,7 +4,6 @@ body {
 }
 
 
-
 .content {
     padding: 30px;
     border: 1px rgba(0, 0, 0, 0.1) solid;
@@ -20,4 +19,10 @@ body {
     background-color: lightgray;
     border-radius: 5px;
     align-items: center;
+}
+
+.userAddress {
+    width: 20%;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }

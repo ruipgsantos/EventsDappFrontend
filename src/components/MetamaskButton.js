@@ -4,30 +4,41 @@ import Web3 from "web3";
 import Cookies from "js-cookie";
 import { Navigate } from "react-router-dom";
 import "../styles/metamaskbutton.css";
+import { useSelector, useDispatch } from "react-redux";
+import { setUserAddress, disconnectUser } from "../features/sessionSlice";
 
 export default function MetamaskButton() {
   const [web3Provider, setWeb3Provider] = useState(null);
   const [web3, setWeb3] = useState(null);
-  const [userAccount, setUserAccount] = useState(undefined);
+  // const [userAccount, setUserAccount] = useState(undefined);
   const [isLoading, setIsLoading] = useState(false);
   const [isWeb3Available, setWeb3Available] = useState(true);
   const [redirect, doRedirect] = useState(false);
 
+  const dispatch = useDispatch();
+  const userAddress = useSelector((state) => state.session.userAddress);
+  const token = useSelector((state) => state.session.token);
+
   useEffect(() => {
     if (window.ethereum) {
       window.ethereum.on("accountsChanged", (addArr) => {
-        Cookies.set("userAccount", addArr[0]);
-        setUserAccount(addArr[0]);
+        //user disconnected
+        if (!addArr[0]) {
+          dispatch(disconnectUser());
+        }
+
+        Cookies.set("userAddress", addArr[0]);
 
         //make user go to initial page when account is reset
         doRedirect(true);
       });
-
-      const userAcc = Cookies.get("userAccount");
-      setUserAccount(userAcc);
     } else {
       setWeb3Available(false);
     }
+
+    //on startup set state with current session address
+    const userAddr = Cookies.get("userAddress");
+    dispatch(setUserAddress(userAddr));
   }, []);
 
   useEffect(() => {
@@ -50,13 +61,13 @@ export default function MetamaskButton() {
             method: "eth_requestAccounts",
           })
           .then((addArr) => {
-            Cookies.set("userAccount", addArr[0]);
-            setUserAccount(addArr[0]);
+            dispatch(setUserAddress(addArr[0]));
             setIsLoading(false);
           })
           .catch((error) => {
             console.log(error);
             setIsLoading(false);
+            dispatch(disconnectUser());
           });
       } catch (error) {
         // User denied account access...
@@ -74,22 +85,22 @@ export default function MetamaskButton() {
   };
 
   const getButtonClass = useCallback(() => {
-    if (userAccount && userAccount !== "undefined") {
+    if (userAddress && userAddress !== "undefined") {
       return "success";
     } else if (!isWeb3Available) {
       return "danger";
     }
     return "primary";
-  }, [isWeb3Available, userAccount]);
+  }, [isWeb3Available, userAddress]);
 
   const getButtonMessage = useCallback(() => {
-    if (userAccount && userAccount !== "undefined") {
+    if (userAddress && userAddress !== "undefined") {
       return "Connected";
     } else if (!isWeb3Available) {
       return "Please install Metamask to connect";
     }
     return "Connect with Metamask";
-  }, [isWeb3Available, userAccount]);
+  }, [isWeb3Available, userAddress]);
 
   return (
     <Button
@@ -98,7 +109,7 @@ export default function MetamaskButton() {
       }}
       className={`metamask_button`}
       variant={getButtonClass()}
-      disabled={(userAccount && userAccount !== "undefined") || isLoading}
+      disabled={(userAddress && userAddress !== "undefined") || isLoading}
     >
       {getButtonMessage()}
 
