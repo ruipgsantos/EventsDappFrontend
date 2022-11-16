@@ -1,0 +1,19 @@
+.metmask_loading {
+    content: url('../../public/gifs/loading.gif');
+    height: 20px;
+    margin-right: auto;
+    margin-left: 5px;
+}
+
+
+.metamask_button {
+    display: flex;
+    align-items: center;
+}
+
+
+.metamask_fox {
+    height: 20px;
+    content: url('../../public/images/metamaskfox.png');
+    margin-left: 5px;
+}
