@@ -1,20 +1,47 @@
-import { Button, Nav } from "react-bootstrap";
+import { Nav } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./styles/app.css";
-import { Routes, Route, Link, Navigate } from "react-router-dom";
+import { Routes, Route, Link, useNavigate } from "react-router-dom";
 import Events from "./views/Events";
 import Space from "./views/Space";
 import EditUser from "./views/EditUser";
 import MetamaskButton from "./components/MetamaskButton";
-import { useEffect, useState } from "react";
+import { useCallback } from "react";
 import Cookies from "js-cookie";
-import { useSelector } from "react-redux";
+import useDappSession from "./hooks/DappSession";
 
 function App() {
-  const userAddress = useSelector((state) => state.session.userAddress);
-  const token = useSelector((state) => state.session.token);
+  const navigate = useNavigate();
+  const onLogout = useCallback(() => {
+    navigate("/");
+  }, [navigate]);
 
-  useEffect(() => {}, [userAddress]);
+  const [
+    { userAddress, isWeb3Available, web3Object, isLoading, isLoggedIn },
+    { login, logout },
+  ] = useDappSession({ onLogout });
+
+  // useEffect(() => {
+  //   if (!isWeb3Available) return;
+  //   console.log(`user address changed: ${userAddress}`);
+
+  //   const signMessage = async () => {
+  //     try {
+  //       const signedMessage = await window.ethereum.request({
+  //         method: "personal_sign",
+  //         params: [userAddress, "nonce"],
+  //       });
+
+  //       console.log(signedMessage);
+  //     } catch (e) {
+  //       console.error(e);
+  //     }
+  //   };
+
+  //   if (userAddress) {
+  //     signMessage();
+  //   }
+  // }, [isWeb3Available, userAddress, web3Obj]);
   return (
     <div className="App">
       <Nav className="header">
@@ -33,7 +60,13 @@ function App() {
         )}
         <div className="userAddress">{userAddress}</div>
         <Nav.Item>
-          <MetamaskButton />
+          <MetamaskButton
+            isWeb3Available={isWeb3Available}
+            isLoading={isLoading}
+            isLoggedIn={isLoggedIn}
+            login={login}
+            logout={logout}
+          />
         </Nav.Item>
       </Nav>
 
@@ -45,8 +78,6 @@ function App() {
           <Route path="/edituser" element={<EditUser />}></Route>
         </Routes>
       </div>
-
-      {/* {!userAddress && <Navigate to="/"></Navigate>} */}
     </div>
   );
 }
