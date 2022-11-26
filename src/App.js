@@ -1,39 +1,50 @@
-import { Button, Nav } from "react-bootstrap";
+import { Nav } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./styles/app.css";
-import { Routes, Route, Link, Navigate } from "react-router-dom";
+import { Routes, Route, Link, useNavigate } from "react-router-dom";
 import Events from "./views/Events";
 import Space from "./views/Space";
 import EditUser from "./views/EditUser";
 import MetamaskButton from "./components/MetamaskButton";
-import { useEffect, useState } from "react";
-import Cookies from "js-cookie";
-import { useSelector } from "react-redux";
+import { useCallback } from "react";
+import useDappSession from "./hooks/DappSession";
 
 function App() {
-  const userAddress = useSelector((state) => state.session.userAddress);
-  const token = useSelector((state) => state.session.token);
+  const navigate = useNavigate();
+  const onLogout = useCallback(() => {
+    navigate("/");
+  }, [navigate]);
 
-  useEffect(() => {}, [userAddress]);
+  const [
+    { userAddress, isWeb3Available, isLoading, isLoggedIn },
+    { login, logout },
+  ] = useDappSession({ onLogout });
+
   return (
     <div className="App">
       <Nav className="header">
         <h1 className="title">
           <Link to="/events">Events</Link>
         </h1>
-        {userAddress && (
+        {isLoggedIn && (
           <Nav.Item>
             <Link to="/edituser">Edit Profile</Link>
           </Nav.Item>
         )}
-        {userAddress && (
+        {isLoggedIn && (
           <Nav.Item>
             <Link to="/myspace">Edit Space</Link>
           </Nav.Item>
         )}
-        <div className="userAddress">{userAddress}</div>
+        {isLoggedIn && <div className="userAddress">{userAddress}</div>}
         <Nav.Item>
-          <MetamaskButton />
+          <MetamaskButton
+            isWeb3Available={isWeb3Available}
+            isLoading={isLoading}
+            isLoggedIn={isLoggedIn}
+            login={login}
+            logout={logout}
+          />
         </Nav.Item>
       </Nav>
 
@@ -45,8 +56,6 @@ function App() {
           <Route path="/edituser" element={<EditUser />}></Route>
         </Routes>
       </div>
-
-      {/* {!userAddress && <Navigate to="/"></Navigate>} */}
     </div>
   );
 }

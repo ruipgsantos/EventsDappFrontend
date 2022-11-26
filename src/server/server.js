@@ -1,4 +1,5 @@
 import axios from "axios";
+axios.defaults.withCredentials = true;
 
 let eventList = [];
 let spaceList = [];
@@ -8,11 +9,13 @@ const request = {
     if (eventList.length > 0) {
       return eventList;
     }
-    console.log("getEvents");
     const response = await axios.get("http://localhost:5000/events/");
-    console.log(response);
 
     eventList = response.data;
+
+    if (!!eventList) {
+      return [];
+    }
 
     //set space list
     eventList.forEach((event) => {
@@ -36,12 +39,11 @@ const request = {
 
       return res;
     }
-    console.log(`getEventsBySpace with id ${spaceId}`);
     const response = await axios.get(`http://localhost:5000/events/${spaceId}`);
-    console.log(response);
     return response.data;
   },
 
+  //TODO: implement server get
   getSpace: async (spaceId) => {
     const spaceIdNum = Number(spaceId);
     const space = spaceList.find((space) => {
@@ -52,4 +54,24 @@ const request = {
   },
 };
 
-export { request };
+const auth = {
+  requestNonce: async (pubkey) => {
+    return (await axios.get(`http://localhost:5000/auth/nonce/${pubkey}`)).data
+      .nonce;
+  },
+
+  sendSignedMessage: async ({ signedmsg, pubkey }) => {
+    const res = await axios.post(`http://localhost:5000/auth/login`, {
+      signedmsg,
+      pubkey,
+    });
+
+    if (res.status === 200) {
+      return true;
+    } else {
+      throw Error({ status: 400 });
+    }
+  },
+};
+
+export { request, auth };

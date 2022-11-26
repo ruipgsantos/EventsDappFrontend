@@ -44,7 +44,11 @@ export default function EventList({ eventList, spaceContext, spaceId }) {
   return (
     <div className="container">
       {events === null ? (
-        <div className="loading"></div>
+        events && events.length > 0 ? (
+          <div className="loading"></div>
+        ) : (
+          <div>There are no events available</div>
+        )
       ) : (
         events &&
         events.map((event) => {

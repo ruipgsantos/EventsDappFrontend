@@ -14,7 +14,7 @@ export default function Space() {
     };
 
     getSpace();
-  }, []);
+  }, [id]);
 
   return space === null ? (
     <div className="loading"></div>
