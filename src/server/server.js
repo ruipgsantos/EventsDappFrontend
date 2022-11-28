@@ -13,7 +13,7 @@ const request = {
 
     eventList = response.data;
 
-    if (!!eventList) {
+    if (!eventList) {
       return [];
     }
 
