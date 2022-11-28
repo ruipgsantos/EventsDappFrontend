@@ -41,46 +41,51 @@ export default function EventList({ eventList, spaceContext, spaceId }) {
     return "primary";
   };
 
+  const getLoading = () => {
+    return <div className="loading"></div>;
+  };
+
+  const getEmpty = () => {
+    return <div>There are no events.</div>;
+  };
+
+  const getExisting = () => {
+    return events.map((event) => {
+      return (
+        <Card
+          bg={getCardStyle(event)}
+          key={`${event.name}${event.description}`}
+        >
+          <div className="eventImage">
+            <img src="/images/metamaskfox.png" alt="" />
+          </div>
+          <Card.Header as="h3">{event.name}</Card.Header>
+          <Card.Body>
+            <Card.Subtitle>{moment(event.date).format("LLL")}</Card.Subtitle>
+            <Card.Subtitle>
+              {event.location || event.space.location}
+            </Card.Subtitle>
+            <Card.Text>{event.description}</Card.Text>
+          </Card.Body>
+          {!spaceContext && (
+            <Card.Footer>
+              <Link to={`/space/${event.space.id}`}>
+                {`${event.space.name}>>>`}
+              </Link>
+            </Card.Footer>
+          )}
+        </Card>
+      );
+    });
+  };
+
   return (
     <div className="container">
-      {events === null ? (
-        events && events.length > 0 ? (
-          <div className="loading"></div>
-        ) : (
-          <div>There are no events available</div>
-        )
-      ) : (
-        events &&
-        events.map((event) => {
-          return (
-            <Card
-              bg={getCardStyle(event)}
-              key={`${event.name}${event.description}`}
-            >
-              <div className="eventImage">
-                <img src="/images/metamaskfox.png" alt="" />
-              </div>
-              <Card.Header as="h3">{event.name}</Card.Header>
-              <Card.Body>
-                <Card.Subtitle>
-                  {moment(event.date).format("LLL")}
-                </Card.Subtitle>
-                <Card.Subtitle>
-                  {event.location || event.space.location}
-                </Card.Subtitle>
-                <Card.Text>{event.description}</Card.Text>
-              </Card.Body>
-              {!spaceContext && (
-                <Card.Footer>
-                  <Link to={`/space/${event.space.id}`}>
-                    {`${event.space.name}>>>`}
-                  </Link>
-                </Card.Footer>
-              )}
-            </Card>
-          );
-        })
-      )}
+      {events === null
+        ? getLoading()
+        : events.length > 0
+        ? getExisting()
+        : getEmpty()}
     </div>
   );
 }
