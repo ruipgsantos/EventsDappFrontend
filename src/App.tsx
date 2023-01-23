@@ -2,23 +2,23 @@ import { Nav } from "react-bootstrap";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "./styles/app.css";
 import { Routes, Route, Link, useNavigate } from "react-router-dom";
-import Events from "./views/Events";
-import Space from "./views/Space";
-import EditUser from "./views/EditUser";
+import Events from "./views/EventsView";
+import Space from "./views/SpaceView";
+import EditUser2 from "./views/EditUserView";
 import MetamaskButton from "./components/MetamaskButton";
 import { useCallback } from "react";
 import useDappSession from "./hooks/DappSession";
 
 function App() {
   const navigate = useNavigate();
-  const onLogout = useCallback(() => {
+  const onLogout = useCallback((): void => {
     navigate("/");
   }, [navigate]);
 
   const [
     { userAddress, isWeb3Available, isLoading, isLoggedIn },
     { login, logout },
-  ] = useDappSession({ onLogout });
+  ] = useDappSession({ initUserAddress: "", onLogout });
 
   return (
     <div className="App">
@@ -28,7 +28,7 @@ function App() {
         </h1>
         {isLoggedIn && (
           <Nav.Item>
-            <Link to="/edituser">Edit Profile</Link>
+            <Link to={`/edituser/${userAddress}`}>Edit Profile</Link>
           </Nav.Item>
         )}
         {isLoggedIn && (
@@ -39,11 +39,11 @@ function App() {
         {isLoggedIn && <div className="userAddress">{userAddress}</div>}
         <Nav.Item>
           <MetamaskButton
-            isWeb3Available={isWeb3Available}
-            isLoading={isLoading}
-            isLoggedIn={isLoggedIn}
-            login={login}
-            logout={logout}
+            isWeb3Available={isWeb3Available!}
+            isLoading={isLoading!}
+            isLoggedIn={isLoggedIn!}
+            login={login!}
+            logout={logout!}
           />
         </Nav.Item>
       </Nav>
@@ -53,7 +53,7 @@ function App() {
           <Route path="/" element={<Events />}></Route>
           <Route path="/events" element={<Events />}></Route>
           <Route path="/space/:id" element={<Space />}></Route>
-          <Route path="/edituser" element={<EditUser />}></Route>
+          <Route path="/edituser/:address" element={<EditUser2 />}></Route>
         </Routes>
       </div>
     </div>

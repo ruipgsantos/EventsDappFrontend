@@ -1,8 +1,18 @@
 import { useCallback, useEffect, useState } from "react";
 import Web3 from "web3";
 import { auth } from "../server/server";
-import Cookies from "js-cookie";
 import useCookie from "./Cookie";
+
+
+import { MetaMaskInpageProvider } from "@metamask/providers";
+
+
+declare global {
+  interface Window {
+    ethereum?: MetaMaskInpageProvider
+  }
+}
+
 
 /**
  * Hook designed to handle entire session of a dapp
@@ -13,51 +23,51 @@ import useCookie from "./Cookie";
  * Optional method to execute when logout is triggered
  * @returns
  */
-const useDappSession = ({ initUserAddress, onLogout }) => {
-  const [userAddress, setUserAddress] = useState(initUserAddress);
-  const [isWeb3Available, setWeb3Available] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [web3Object, setWeb3Obj] = useState(undefined);
-  const [isLoading, setIsLoading] = useState(false);
+const useDappSession = ({ initUserAddress, onLogout }:
+  { initUserAddress: string, onLogout: Function }) => {
+  const [isWeb3Available, setWeb3Available] = useState<boolean>(false);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [web3Object, setWeb3Obj] = useState<any>(undefined);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const [isAuthenticated, setIsAuthenticated] = useCookie({
-    key: "isAuthenticated",
+  const [cookieAuthState, isAuthenticated, setIsAuthenticated] = useCookie<any>({
+    key: "authd",
   });
+  const [cookieAddrState, cookieUserAddress, setCookieUserAddress] = useCookie<string>({ key: "useraddr" });
+  const [userAddress, setUserAddress] = useState<string>(cookieUserAddress);
 
   /**
    * Method to handle logout. If existing, it will also execute the provided {@link onLogout} method
    */
   const doLogout = useCallback(() => {
-    setUserAddress(undefined);
-    setIsLoggedIn(false);
+    setIsAuthenticated(false);
+    setCookieUserAddress("");
 
-    if (onLogout) {
-      onLogout();
-    }
+    onLogout && onLogout();
 
     //TODO: request server to delete session
-  }, [onLogout]);
+  }, [onLogout, setCookieUserAddress, setIsAuthenticated]);
 
   useEffect(() => {
-    setIsLoggedIn(!!isAuthenticated);
+    setIsLoggedIn(isAuthenticated() === 'true');
   }, [isAuthenticated]);
 
   useEffect(() => {
     if (window.ethereum) {
       setWeb3Available(true);
-      setWeb3Obj(new Web3(window.ethereum));
+      setWeb3Obj(new Web3(window.ethereum as any));
 
-      window.ethereum.on("accountsChanged", (addArr) => {
+      window.ethereum.on("accountsChanged", (...addArr: unknown[]) => {
         if (!addArr[0]) {
           //user disconnected
           doLogout();
         } else {
           //user simply changed account
-          setUserAddress(addArr[0]);
+          setCookieUserAddress(addArr[0] as string);
         }
       });
     }
-  }, [doLogout]);
+  }, [doLogout, setCookieUserAddress]);
 
   /**
    * Requests connection for user's Metamask wallet
@@ -65,12 +75,12 @@ const useDappSession = ({ initUserAddress, onLogout }) => {
    * @returns
    */
   const doWeb3Login = async () => {
-    if (isWeb3Available) {
+    if (isWeb3Available && window.ethereum) {
       const addArr = await window.ethereum.request({
         method: "eth_requestAccounts",
-      });
+      }) as string[];
 
-      setUserAddress(addArr[0]);
+      setCookieUserAddress(addArr[0]);
 
       return addArr[0];
     }
@@ -84,7 +94,7 @@ const useDappSession = ({ initUserAddress, onLogout }) => {
    *
    * @param {*} userAddr
    */
-  const doServerLogin = async (userAddr) => {
+  const doServerLogin = async (userAddr: string) => {
     //request nonce from server
     const nonce = await auth.requestNonce(userAddr);
 
@@ -97,15 +107,14 @@ const useDappSession = ({ initUserAddress, onLogout }) => {
       },
     ];
 
-    let signedMessage = await window.ethereum.request({
+    let signedMessage = await window?.ethereum?.request<string>({
       method: "eth_signTypedData",
       params: [params, userAddr],
-      from: userAddr,
     });
 
     //send back to server and await response
     await auth.sendSignedMessage({
-      signedmsg: signedMessage,
+      signedmsg: signedMessage!,
       pubkey: userAddr,
     });
   };
@@ -121,9 +130,11 @@ const useDappSession = ({ initUserAddress, onLogout }) => {
       const userAddr = await doWeb3Login();
 
       //server
-      await doServerLogin(userAddr);
+      await doServerLogin(userAddr!);
 
-      setIsAuthenticated(Cookies.get("isAuthenticated"));
+      // Cookies.set("authd", "true", { expires: 1 });
+      setIsAuthenticated(true);
+      setCookieUserAddress(userAddr!)
       setIsLoggedIn(true);
     } catch (err) {
       console.error(`Could not login`);
@@ -137,7 +148,7 @@ const useDappSession = ({ initUserAddress, onLogout }) => {
   const logout = doLogout;
 
   return [
-    { userAddress, isWeb3Available, web3Object, isLoading, isLoggedIn },
+    { userAddress: cookieAddrState, isWeb3Available, web3Object, isLoading, isLoggedIn },
     { login, logout },
   ];
 };

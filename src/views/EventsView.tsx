@@ -1,9 +1,10 @@
 import EventList from "../components/EventList";
+import React from "react";
 
 export default function Events() {
   return (
     <div>
-      <EventList />
+      <EventList eventList={[]} spaceId={0} spaceContext={false} />
     </div>
   );
 }

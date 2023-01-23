@@ -1,15 +1,18 @@
 import axios from "axios";
+import { Event, Space, User } from "../interfaces";
 axios.defaults.withCredentials = true;
 
-let eventList = [];
-let spaceList = [];
+let eventList: Event[] = [];
+let spaceList: Space[] = [];
+
+const api_url = process.env.REACT_APP_API_URL;
 
 const request = {
-  getEvents: async () => {
+  getEvents: async (): Promise<Event[]> => {
     if (eventList.length > 0) {
       return eventList;
     }
-    const response = await axios.get("http://localhost:5000/events/");
+    const response = await axios.get(`${api_url}/events/`);
 
     eventList = response.data;
 
@@ -30,7 +33,7 @@ const request = {
     return eventList;
   },
 
-  getEventsBySpace: async (spaceId) => {
+  getEventsBySpace: async (spaceId: number): Promise<Event[]> => {
     const spaceIdNum = Number(spaceId);
     if (eventList.length > 0) {
       const res = eventList.filter((event) => {
@@ -39,29 +42,43 @@ const request = {
 
       return res;
     }
-    const response = await axios.get(`http://localhost:5000/events/${spaceId}`);
+    const response = await axios.get(`${api_url}/events/${spaceId}`);
     return response.data;
   },
 
   //TODO: implement server get
-  getSpace: async (spaceId) => {
+  getSpace: (spaceId: number | string): Space => {
     const spaceIdNum = Number(spaceId);
     const space = spaceList.find((space) => {
       return space.id === spaceIdNum;
     });
 
-    return space;
+    return space!;
+  },
+
+  getUser: async (pubkey: string) => {
+    const res = await axios.get<User>(`${api_url}/user/${pubkey}`);
+    return res.data;
+  },
+
+  updateUser: async (user: User) => {
+    return (await axios.put<User>(`${api_url}/user`, user)).status;
   },
 };
 
 const auth = {
-  requestNonce: async (pubkey) => {
-    return (await axios.get(`http://localhost:5000/auth/nonce/${pubkey}`)).data
-      .nonce;
+  requestNonce: async (pubkey: string) => {
+    return (await axios.get(`${api_url}/auth/nonce/${pubkey}`)).data.nonce;
   },
 
-  sendSignedMessage: async ({ signedmsg, pubkey }) => {
-    const res = await axios.post(`http://localhost:5000/auth/login`, {
+  sendSignedMessage: async ({
+    signedmsg,
+    pubkey,
+  }: {
+    signedmsg: string;
+    pubkey: string;
+  }) => {
+    const res = await axios.post(`${api_url}/auth/login`, {
       signedmsg,
       pubkey,
     });
@@ -69,7 +86,7 @@ const auth = {
     if (res.status === 200) {
       return true;
     } else {
-      throw Error({ status: 400 });
+      throw Error(`400`);
     }
   },
 };
